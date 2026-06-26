@@ -23,7 +23,10 @@ RUN cd backend && npm install
 # Ensure database storage directory exists
 RUN mkdir -p data /data
 
+ENV DB_PATH=/app/data/news_pulse.db
+ENV SCRAPER_URL=http://127.0.0.1:5000
+
 EXPOSE 3001
 
 # Start Python Scraper microservice (port 5000) in background, then launch Node API (port 3001)
-CMD python3 scraper/app.py & cd backend && PORT=3001 DB_PATH=/app/data/news_pulse.db SCRAPER_URL=http://127.0.0.1:5000 node index.js
+CMD python3 scraper/app.py & cd backend && PORT=3001 node index.js
