@@ -1,7 +1,23 @@
 const Database = require('better-sqlite3');
 
-// Read DB path from Docker environment or default to local shared volume
-const DB_PATH = process.env.DB_PATH || '/data/news_pulse.db';
+const path = require('path');
+const fs = require('fs');
+
+// Read DB path from environment or fallback to local ./data folder
+let DB_PATH = process.env.DB_PATH;
+if (!DB_PATH) {
+    const localDataDir = path.join(__dirname, 'data');
+    if (!fs.existsSync(localDataDir)) {
+        fs.mkdirSync(localDataDir, { recursive: true });
+    }
+    DB_PATH = path.join(localDataDir, 'news_pulse.db');
+} else {
+    // If custom DB_PATH (e.g. /data/news_pulse.db) is set, ensure folder exists
+    const parentDir = path.dirname(DB_PATH);
+    if (!fs.existsSync(parentDir)) {
+        try { fs.mkdirSync(parentDir, { recursive: true }); } catch (e) {}
+    }
+}
 
 // Connect to SQLite
 const db = new Database(DB_PATH);
