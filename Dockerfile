@@ -25,8 +25,9 @@ RUN mkdir -p data /data
 
 ENV DB_PATH=/app/data/news_pulse.db
 ENV SCRAPER_URL=http://127.0.0.1:5000
+ENV PYTHONUNBUFFERED=1
 
 EXPOSE 3001
 
-# Start Python Scraper microservice (port 5000) in background, then launch Node API (port 3001)
-CMD python3 scraper/app.py & cd backend && PORT=3001 node index.js
+# Start Python Scraper microservice (port 5000) in background, then launch Node API (using dynamic PORT assigned by cloud provider)
+CMD python3 scraper/app.py & cd backend && node index.js
