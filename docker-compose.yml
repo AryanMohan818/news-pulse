@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # 1. The Python Scraper Microservice
+  scraper:
+    build: 
+      context: ./scraper
+    container_name: np_scraper
+    ports:
+      - "5000:5000"  # Flask/FastAPI will run on port 5000
+    volumes:
+      - ./scraper:/app       # Syncs your Python code live
+      - shared_data:/data    # Mounts the shared database folder
+    environment:
+      - DB_PATH=/data/news_pulse.db
+
+  # 2. The Node.js Backend API
+  backend:
+    build: 
+      context: ./backend
+    container_name: np_backend
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app       # Syncs your Node code live
+      - /app/node_modules     # This resolves my error which was windows folder hide out the node modules
+      - shared_data:/data    # Mounts the same shared database folder!
+    environment:
+      - PORT=3001
+      - DB_PATH=/data/news_pulse.db
+      - SCRAPER_URL=http://scraper:5000  # Docker DNS automatically resolves this!
+    depends_on:
+      - scraper
+
+  # 3. The Next.js Frontend
+  frontend:
+    build: 
+      context: ./frontend
+    container_name: np_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app      # Syncs your React code live
+      - /app/node_modules     # Preserves container node_modules from being masked by Windows host mount
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    depends_on:
+      - backend
+
+# Define the shared volume so both Scraper and Backend can access the SQLite DB
+volumes:
+  shared_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data
