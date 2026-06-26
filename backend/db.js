@@ -25,6 +25,38 @@ const db = new Database(DB_PATH);
 // Enable Write-Ahead Logging to match Python's setting
 db.pragma('journal_mode = WAL');
 
+// Ensure database tables exist (prevents 'no such table' 500 errors on cold cloud starts)
+db.exec(`
+    CREATE TABLE IF NOT EXISTS clusters (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        label TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS articles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        url TEXT UNIQUE NOT NULL,
+        source TEXT NOT NULL,
+        summary TEXT,
+        content TEXT,
+        published_at TEXT,
+        cluster_id INTEGER,
+        fetched_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (cluster_id) REFERENCES clusters(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS ingest_jobs (
+        id TEXT PRIMARY KEY,
+        status TEXT DEFAULT 'running',
+        started_at TEXT DEFAULT (datetime('now')),
+        completed_at TEXT,
+        articles_fetched INTEGER DEFAULT 0,
+        clusters_formed INTEGER DEFAULT 0,
+        error TEXT
+    );
+`);
+
 /**
  * Retrieves all clusters summary metrics.
  */
