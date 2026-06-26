@@ -129,6 +129,8 @@ function getJobStatus(jobId) {
 }
 
 module.exports = {
+    db,
+    DB_PATH,
     getClusters,
     getClusterById,
     getTimelineData,
