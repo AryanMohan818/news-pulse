@@ -17,5 +17,7 @@ COPY . .
 
 EXPOSE 5000
 
+ENV PYTHONUNBUFFERED=1
+
 # We will run a lightweight Python web server (like Flask or FastAPI)
-CMD ["python", "app.py"]
+CMD ["python", "-u", "app.py"]

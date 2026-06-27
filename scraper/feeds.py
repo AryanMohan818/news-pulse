@@ -28,7 +28,7 @@ def parse_feed_date(entry):
         return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
-def fetch_feed_articles(feed_config, max_articles=25):
+def fetch_feed_articles(feed_config, max_articles=12):
     """
     Fetches and parses a single RSS feed.
     Returns a normalized list of article dictionaries.

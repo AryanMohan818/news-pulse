@@ -12,4 +12,4 @@ FEEDS = [
 
 # Request headers to look like a real browser
 USER_AGENT = "NewsPulseBot/1.0 (+http://localhost:3000)"
-REQUEST_TIMEOUT = 10  # seconds
+REQUEST_TIMEOUT = 5  # seconds

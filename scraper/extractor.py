@@ -1,6 +1,7 @@
 import requests
 import trafilatura
 from bs4 import BeautifulSoup
+from concurrent.futures import ThreadPoolExecutor
 from config import USER_AGENT, REQUEST_TIMEOUT
 
 def extract_full_text(url):
@@ -60,25 +61,24 @@ def extract_full_text(url):
 def enrich_articles_with_content(articles):
     """
     Takes a list of article dictionaries (from feeds.py) and populates
-    their 'content' field with the scraped full body text.
+    their 'content' field with the scraped full body text using multithreading.
     """
-    enriched_count = 0
     total = len(articles)
+    print(f"\n🌐 Extracting full article body text concurrently for {total} articles...")
     
-    print(f"\n🌐 Extracting full article body text for {total} articles...")
-    
-    for i, article in enumerate(articles, 1):
+    def fetch_for_article(article):
         url = article["url"]
-        print(f"   [{i}/{total}] Scraping body: {article['title'][:45]}...")
-        
         body_text = extract_full_text(url)
-        
         if body_text:
             article["content"] = body_text
-            enriched_count += 1
+            return True
         else:
-            # If a site blocks us or has a hard paywall, fallback to summary text
             article["content"] = article["summary"]
-            
+            return False
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        results = list(executor.map(fetch_for_article, articles))
+        
+    enriched_count = sum(1 for r in results if r)
     print(f"✅ Successfully extracted full content for {enriched_count}/{total} articles!")
     return articles
