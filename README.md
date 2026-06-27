@@ -8,8 +8,8 @@ News Pulse is an automated live news ingestion and visualization system. It pull
 
 ## 🌐 Live Deployment & Walkthrough
 
-* **Live Frontend URL**: *[Insert Deployed Vercel URL Here]*
-* **Live Backend API URL**: *[Insert Deployed API URL Here]*
+* **Live Frontend URL**: *[https://news-pulse-one.vercel.app/]*
+* **Live Backend API URL**: *[https://news-pulse-1osv.onrender.com]*
 * **Video Walkthrough (2–3 mins)**: *[Insert Loom / YouTube Unlisted Link Here]*
 
 ---
