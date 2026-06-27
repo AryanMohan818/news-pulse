@@ -1,44 +1,34 @@
-const { spawn } = require('child_process');
-const path = require('path');
-const db = require('./db');
-
-// Read the scraper microservice URL from environment
-const SCRAPER_URL = process.env.SCRAPER_URL;
+// Read the scraper microservice URL from Docker Compose environment
+const SCRAPER_URL = process.env.SCRAPER_URL || 'http://scraper:5000';
 
 /**
- * Triggers an asynchronous scraping job.
- * Works both via HTTP microservice ping (in Docker Compose) and local child_process spawn (on cloud servers).
+ * Triggers an asynchronous scraping job on the Python microservice.
+ * Returns the generated jobId immediately.
  */
 async function triggerScraperService() {
+    // Generate a random job tracking ID
     const jobId = 'job_' + Math.random().toString(16).slice(2, 10);
-    console.log(`📡 Triggering Ingestion Pipeline [Job ${jobId}]...`);
     
-    // Insert initial tracking record into database
+    console.log(`📡 Pinging Scraper Microservice at ${SCRAPER_URL}/run?jobId=${jobId}...`);
+    
     try {
-        db.db.prepare("INSERT OR IGNORE INTO ingest_jobs (id, status) VALUES (?, 'running')").run(jobId);
-    } catch (e) {}
-
-    // Option A: If SCRAPER_URL is explicitly configured (e.g. Docker network http://scraper:5000)
-    if (SCRAPER_URL) {
-        try {
-            const response = await fetch(`${SCRAPER_URL}/run?jobId=${jobId}`, { method: 'POST' });
-            if (response.ok) return jobId;
-        } catch (e) {
-            console.warn(`HTTP scraper ping failed (${e.message}), falling back to local Python spawn`);
+        const response = await fetch(`${SCRAPER_URL}/run?jobId=${jobId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Scraper microservice returned HTTP ${response.status}`);
         }
+        
+        const data = await response.json();
+        console.log(` -> Scraper accepted job:`, data);
+        
+        return jobId;
+    } catch (error) {
+        console.error(`❌ Error communicating with Python scraper:`, error.message);
+        throw error;
     }
-
-    // Option B: Fallback to spawning Python pipeline directly as child process
-    const pyScript = path.join(__dirname, '../scraper/run_job.py');
-    const py = spawn('python3', [pyScript, jobId], {
-        env: { ...process.env, DB_PATH: db.DB_PATH }
-    });
-
-    py.stdout.on('data', data => console.log(`[Python Scraper]: ${data}`));
-    py.stderr.on('data', data => console.error(`[Python Scraper ERR]: ${data}`));
-    py.on('close', code => console.log(`🏁 Python scraper job ${jobId} finished with code ${code}`));
-
-    return jobId;
 }
 
 module.exports = {

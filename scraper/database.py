@@ -149,7 +149,7 @@ def create_ingest_job(job_id):
     """Creates a new tracking record for a scraper job."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("INSERT OR IGNORE INTO ingest_jobs (id, status) VALUES (?, 'running')", (job_id,))
+    cursor.execute("INSERT INTO ingest_jobs (id, status) VALUES (?, 'running')", (job_id,))
     conn.commit()
     conn.close()
 

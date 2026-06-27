@@ -1,6 +1,0 @@
-services:
-  - type: web
-    name: news-pulse-backend
-    runtime: docker
-    plan: free
-    healthCheckPath: /

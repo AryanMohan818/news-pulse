@@ -20,7 +20,7 @@ The project is structured into three decoupled microservices running inside Dock
 
 ```mermaid
 flowchart LR
-    subgraph ScraperService [Python / Flask]
+    subgraph Scraper Service [Python / Flask]
         RSS[(Public RSS Feeds)] -->|feedparser| Normalizer
         Normalizer -->|trafilatura| Extractor[Full-Text Body Extractor]
         Extractor -->|scikit-learn| Clusterer[TF-IDF Agglomerative Clustering]
@@ -30,9 +30,9 @@ flowchart LR
         Clusterer --> DB[(SQLite Database)]
     end
 
-    subgraph BackendAPI [Node.js / Express]
+    subgraph Backend API [Node.js / Express]
         DB -->|better-sqlite3| API[Express REST API]
-        API -->|Trigger & Poll| ScraperService
+        API -->|Trigger & Poll| Scraper Service
     end
 
     subgraph Frontend [Next.js / React]

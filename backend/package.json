@@ -4,8 +4,7 @@
   "description": "News Pulse API",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "postinstall": "pip install --no-cache-dir -r ../scraper/requirements.txt || pip3 install --no-cache-dir -r ../scraper/requirements.txt || true"
+    "start": "node index.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.1.2",

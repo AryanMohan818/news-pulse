@@ -1,61 +1,13 @@
 const Database = require('better-sqlite3');
 
-const path = require('path');
-const fs = require('fs');
-
-// Read DB path from environment or fallback to local ./data folder
-let DB_PATH = process.env.DB_PATH;
-if (!DB_PATH) {
-    const localDataDir = path.join(__dirname, 'data');
-    if (!fs.existsSync(localDataDir)) {
-        fs.mkdirSync(localDataDir, { recursive: true });
-    }
-    DB_PATH = path.join(localDataDir, 'news_pulse.db');
-} else {
-    // If custom DB_PATH (e.g. /data/news_pulse.db) is set, ensure folder exists
-    const parentDir = path.dirname(DB_PATH);
-    if (!fs.existsSync(parentDir)) {
-        try { fs.mkdirSync(parentDir, { recursive: true }); } catch (e) {}
-    }
-}
+// Read DB path from Docker environment or default to local shared volume
+const DB_PATH = process.env.DB_PATH || '/data/news_pulse.db';
 
 // Connect to SQLite
 const db = new Database(DB_PATH);
 
 // Enable Write-Ahead Logging to match Python's setting
 db.pragma('journal_mode = WAL');
-
-// Ensure database tables exist (prevents 'no such table' 500 errors on cold cloud starts)
-db.exec(`
-    CREATE TABLE IF NOT EXISTS clusters (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        label TEXT NOT NULL,
-        created_at TEXT DEFAULT (datetime('now'))
-    );
-
-    CREATE TABLE IF NOT EXISTS articles (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        url TEXT UNIQUE NOT NULL,
-        source TEXT NOT NULL,
-        summary TEXT,
-        content TEXT,
-        published_at TEXT,
-        cluster_id INTEGER,
-        fetched_at TEXT DEFAULT (datetime('now')),
-        FOREIGN KEY (cluster_id) REFERENCES clusters(id)
-    );
-
-    CREATE TABLE IF NOT EXISTS ingest_jobs (
-        id TEXT PRIMARY KEY,
-        status TEXT DEFAULT 'running',
-        started_at TEXT DEFAULT (datetime('now')),
-        completed_at TEXT,
-        articles_fetched INTEGER DEFAULT 0,
-        clusters_formed INTEGER DEFAULT 0,
-        error TEXT
-    );
-`);
 
 /**
  * Retrieves all clusters summary metrics.
@@ -129,8 +81,6 @@ function getJobStatus(jobId) {
 }
 
 module.exports = {
-    db,
-    DB_PATH,
     getClusters,
     getClusterById,
     getTimelineData,
